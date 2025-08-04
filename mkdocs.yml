@@ -1,7 +1,64 @@
-site_name: ARW-P
+site_name: ARW-P Documentation
+site_description: The Agent-Ready Web Protocol - Enabling AI-native web interactions
+site_url: https://arwproject.github.io/ARW-P/
+repo_url: https://github.com/arwproject/arw-p
+repo_name: arwproject/arw-p
+edit_uri: edit/main/docs/
+
 nav:
   - Home: index.md
-  - Endpoint & Token Flows: flows.md
+  - Implementation Guide: flows.md
+
 theme:
   name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/arwproject/arw-p
+
 docs_dir: docs
+site_dir: site
+
+copyright: Copyright &copy; 2024 ARW-P Project Contributors
