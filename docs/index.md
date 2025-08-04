@@ -4,7 +4,7 @@
 
 *Enabling seamless AI-to-web interactions without compromising human experiences*
 
-![Version](https://img.shields.io/badge/version-0.1-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Status](https://img.shields.io/badge/status-Beta-orange.svg)
+![Version](https://img.shields.io/badge/version-1.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Status](https://img.shields.io/badge/status-Beta-orange.svg)
 
 ---
 
@@ -57,188 +57,38 @@ ARW-P creates a parallel interaction layer that coexists with your existing web 
 
 ---
 
-## 🏢 Protocol vs. Product Implementation
+## 👥 Core Actors & Trust Model
 
-ARW-P exists at two levels: **Open Protocol** and **Commercial SaaS Implementation**
+| Actor | Role & Responsibilities |
+|-------|------------------------|
+| **🏢 Site Host** | • Publishes discovery files at `/.well-known/`<br>• Issues time-limited JWT tokens<br>• Defines available endpoints and scopes |
+| **🤖 Agent Provider** | • Supplies cryptographic public keys<br>• Respects documented rate limits<br>• Follows endpoint specifications |
+| **🌐 Edge Gateway** *(optional)* | • Provides additional authentication layers<br>• Implements advanced rate limiting<br>• Shapes and caches responses |
+| **👤 Human Visitor** | • Continues using normal web interface<br>• Unaffected by agent interactions<br>• May benefit from agent-enhanced features |
 
-### 📜 Open Protocol Layer (ARW-P Core)
+---
 
-The **open, free-to-implement** standard that defines:
-- Discovery file formats (`/.well-known/agents.json`)
-- Authentication flows (agent + user delegation)
-- API endpoint specifications
-- Security requirements
+## 📋 Required Components (v1.0)
 
-**Anyone can implement this protocol directly.**
+### Core Discovery Files
 
-### 🚀 Commercial SaaS Layer (Implementation Product)
+| Endpoint | HTTP Method | Purpose | Required Fields |
+|----------|-------------|---------|-----------------|
+| `/.well-known/ai-token` | `GET` + `POST` | Agent identity token exchange | `nonce`, `tokenEndpoint` |
+| `/.well-known/user-delegate` | `POST` | User delegation request | `user_id`, `scopes`, `callback_url` |
+| `/.well-known/user-token` | `POST` | User token exchange | `delegation_request_id`, `authorization_code` |
+| `/.well-known/agents.json` | `GET` | Capability discovery | `specVersion`, `endpoints`, `scopes` |
 
-A **complete business solution** built on ARW-P that provides:
+### Content Endpoints
 
-#### 🔧 Beacon/CLI Tool
-Automated tool that integrates into your CI/CD pipeline:
-
-```bash
-npm install -g arw-beacon
-
-# During your build process
-arw-beacon scan --site https://mysite.com --output ai-manifest.json
-arw-beacon deploy --manifest ai-manifest.json --target production
-```
-
-**What the Beacon does:**
-- Scans your website during build time
-- Automatically detects available endpoints and content
-- Generates `ai-manifest.json` with structured data catalog
-- Injects `data-ai-action` attributes into HTML elements
-- Creates semantic content mappings for AI agents
-
-#### 🌐 Edge Gateway Infrastructure
-Smart reverse-proxy layer (Cloudflare Workers) that handles:
-
-```
-┌─────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  AI Agent   │───▶│  Edge Gateway   │───▶│  Your Website   │
-│             │    │  (CDN Worker)   │    │                 │
-│             │    │                 │    │                 │
-│             │    │ • Auth & Rate   │    │ • Minimal       │
-│             │    │   Limiting      │    │   Changes       │
-│             │    │ • Signed Object │    │ • Existing APIs │
-│             │    │   Serving       │    │ • Normal Ops   │
-│             │    │ • API Proxying  │    │                 │
-└─────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-#### 📋 ai-manifest.json Structure
-Auto-generated catalog of your site's AI-friendly capabilities:
-
-```json
-{
-  "$schema": "https://arw.dev/schemas/ai-manifest-1.0.json",
-  "version": "1.0",
-  "generated": "2024-01-15T10:30:00Z",
-  "site": {
-    "domain": "mystore.com",
-    "name": "My Online Store",
-    "description": "E-commerce platform for outdoor gear"
-  },
-  "content_catalog": {
-    "products": {
-      "endpoint": "https://ai.mystore.com/ai/products/{id}",
-      "search_endpoint": "https://ai.mystore.com/ai/search/products",
-      "total_items": 1247,
-      "categories": ["hiking", "camping", "climbing"],
-      "sample_ids": ["prod_123", "prod_456"]
-    },
-    "articles": {
-      "endpoint": "https://ai.mystore.com/ai/articles/{slug}",
-      "search_endpoint": "https://ai.mystore.com/ai/search/articles",
-      "total_items": 89,
-      "topics": ["gear-reviews", "hiking-tips", "safety-guides"]
-    }
-  },
-  "actions": {
-    "search_products": {
-      "endpoint": "https://ai.mystore.com/ai/search/products",
-      "method": "POST",
-      "scopes": ["catalog"],
-      "parameters": {
-        "q": "string",
-        "category": "string",
-        "price_range": "object"
-      }
-    },
-    "check_inventory": {
-      "endpoint": "https://ai.mystore.com/ai/inventory/check", 
-      "method": "POST",
-      "scopes": ["inventory"],
-      "requires_user": false
-    },
-    "add_to_cart": {
-      "endpoint": "https://ai.mystore.com/ai/cart/add",
-      "method": "POST", 
-      "scopes": ["cart"],
-      "requires_user": true,
-      "user_scopes": ["shopping"]
-    }
-  },
-  "ui_elements": {
-    "product_cards": {
-      "selector": "[data-ai-action='product-card']",
-      "attributes": {
-        "data-product-id": "Product identifier",
-        "data-ai-price": "Current price",
-        "data-ai-availability": "In stock status"
-      }
-    },
-    "add_to_cart_button": {
-      "selector": "[data-ai-action='add-to-cart']",
-      "attributes": {
-        "data-product-id": "Product to add",
-        "data-quantity": "Number of items"
-      }
-    }
-  }
-}
-```
-
-#### 🎯 data-ai-action Attributes
-Stable, semantic HTML attributes injected by the Beacon:
-
-```html
-<!-- Traditional HTML (fragile for AI) -->
-<button class="btn btn-primary cart-add-item" id="add-123">Add to Cart</button>
-
-<!-- ARW-P Enhanced (stable for AI) -->
-<button 
-  class="btn btn-primary cart-add-item" 
-  id="add-123"
-  data-ai-action="add-to-cart"
-  data-product-id="prod_123"
-  data-price="29.99"
-  data-ai-label="Add hiking boots to cart">
-  Add to Cart
-</button>
-```
-
-#### 🗂️ ai-booking-map.yaml (Optional)
-For complex workflows, explicitly map internal APIs to public AI endpoints:
-
-```yaml
-# ai-booking-map.yaml - Customer authored
-apiVersion: arw.dev/v1
-kind: BookingMap
-metadata:
-  site: mytravel.com
-  
-mappings:
-  flight_search:
-    public_endpoint: /ai/flights/search
-    internal_apis:
-      - POST /internal/flight-search/v2
-      - GET /internal/inventory/flights
-    transformation: flight_search_transform
-    
-  hotel_booking:
-    public_endpoint: /ai/hotels/book
-    internal_apis:
-      - POST /internal/booking/create
-      - POST /internal/payment/process
-    requires_user: true
-    scopes: [booking, payments]
-    transformation: hotel_booking_transform
-```
-
-### 🔄 Implementation Comparison
-
-| Aspect | Open Protocol (DIY) | Commercial SaaS |
-|--------|-------------------|-----------------|
-| **Setup Time** | 2-4 weeks of dev work | 1-day integration |
-| **Maintenance** | Ongoing updates required | Automatically maintained |
-| **Features** | Basic auth + endpoints | Full AI optimization suite |
-| **Cost** | Developer time | Subscription fee |
-| **Control** | Full control | Managed service |
-| **Customization** | Unlimited | Configurable |
+| Pattern | Purpose | Content Type |
+|---------|---------|--------------|
+| `/ai/<pageId>.json` | Page-specific structured data | `application/json` |
+| `/ai/search` | Natural language search interface | `application/json` |
+| `/ai/search/semantic` | Vector-based semantic search | `application/json` |
+| `/ai/memory/store` | Agent conversation context storage | `application/json` |
+| `/ai/memory/retrieve` | Agent conversation context retrieval | `application/json` |
+| `/ai/stream/*` *(optional)* | Real-time updates via Server-Sent Events | `text/event-stream` |
 
 ---
 
@@ -445,48 +295,6 @@ Webhook-style notifications for important events:
 
 ---
 
-## 👥 Core Actors & Trust Model
-
-| Actor | Role & Responsibilities |
-|-------|------------------------|
-| **🏢 Site Host** | • Publishes discovery files at `/.well-known/`<br>• Issues time-limited JWT tokens<br>• Defines available endpoints and scopes |
-| **🤖 Agent Provider** | • Supplies cryptographic public keys<br>• Respects documented rate limits<br>• Follows endpoint specifications |
-| **🌐 Edge Gateway** *(optional)* | • Provides additional authentication layers<br>• Implements advanced rate limiting<br>• Shapes and caches responses |
-| **👤 Human Visitor** | • Continues using normal web interface<br>• Unaffected by agent interactions<br>• May benefit from agent-enhanced features |
-
----
-
-## 📋 Required Components (v1.0)
-
-### Core Discovery Files
-
-| Endpoint | HTTP Method | Purpose | Required Fields |
-|----------|-------------|---------|-----------------|
-| `/.well-known/ai-token` | `GET` + `POST` | Agent identity token exchange | `nonce`, `tokenEndpoint` |
-| `/.well-known/user-delegate` | `POST` | User delegation request | `user_id`, `scopes`, `callback_url` |
-| `/.well-known/user-token` | `POST` | User token exchange | `delegation_request_id`, `authorization_code` |
-| `/.well-known/agents.json` | `GET` | Capability discovery | `specVersion`, `endpoints`, `scopes` |
-
-### Advanced Discovery (SaaS Implementation)
-
-| Endpoint | Purpose | Content Type |
-|----------|---------|--------------|
-| `/.well-known/ai-manifest.json` | Auto-generated content catalog | `application/json` |
-| `/ai-booking-map.yaml` | Custom API mapping (optional) | `text/yaml` |
-
-### Content Endpoints
-
-| Pattern | Purpose | Content Type |
-|---------|---------|--------------|
-| `/ai/<pageId>.json` | Page-specific structured data | `application/json` |
-| `/ai/search` | Natural language search interface | `application/json` |
-| `/ai/search/semantic` | Vector-based semantic search | `application/json` |
-| `/ai/memory/store` | Agent conversation context storage | `application/json` |
-| `/ai/memory/retrieve` | Agent conversation context retrieval | `application/json` |
-| `/ai/stream/*` *(optional)* | Real-time updates via Server-Sent Events | `text/event-stream` |
-
----
-
 ## 🎨 Implementation Examples
 
 ### Basic Discovery Configuration
@@ -622,8 +430,7 @@ Create your `/.well-known/agents.json`:
     "realtime_updates": true,
     "persistent_memory": true,
     "user_delegation": true,
-    "semantic_search": true,
-    "ai_manifest": true
+    "semantic_search": true
   }
 }
 ```
@@ -826,9 +633,9 @@ We welcome contributions! Areas we need help with:
 
 ### Roadmap
 
-- **v0.2** - Enhanced streaming capabilities
-- **v0.3** - Advanced authentication methods
-- **v1.0** - Production stability guarantee
+- **v1.1** - Enhanced streaming capabilities
+- **v1.2** - Advanced authentication methods
+- **v2.0** - Production stability guarantee
 
 ---
 

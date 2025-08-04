@@ -1,17 +1,13 @@
 # 🤖 ARW-P: Agent-Ready Web Protocol
 
-<div align="center">
-
-[![Version](https://img.shields.io/badge/version-0.1-blue.svg)](https://github.com/arwproject/arw-p)
+[![Version](https://img.shields.io/badge/version-1.0-blue.svg)](https://github.com/arwproject/arw-p)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-live-brightgreen.svg)](https://arwproject.github.io/arw-p/)
+[![Documentation](https://img.shields.io/badge/docs-live-brightgreen.svg)](https://arwproject.github.io/ARW-P/)
 [![Community](https://img.shields.io/badge/community-active-purple.svg)](https://github.com/arwproject/arw-p/discussions)
 
 **The future-ready protocol that bridges AI agents and web services**
 
 *Enabling seamless AI-to-web interactions without compromising human experiences*
-
-</div>
 
 ---
 
@@ -32,34 +28,16 @@
 - 🧠 **Persistent Memory** - Agent conversation context across sessions
 - 🎯 **AI-Semantic Elements** - Stable UI targeting with data-ai-action attributes
 
-### 🏢 Protocol vs. Product
-
-ARW-P exists at two levels:
-
-#### 📜 **Open Protocol** (Free to Implement)
-- Core authentication and discovery specifications  
-- Anyone can implement the standard directly
-- Full control over implementation and hosting
-- Suitable for teams with development resources
-
-#### 🚀 **Commercial SaaS** (Managed Implementation)
-- **Beacon/CLI tool** - Automated manifest generation during CI/CD
-- **Edge Gateway** - Managed authentication and rate limiting infrastructure  
-- **AI Manifest** - Auto-generated content catalogs and semantic mappings
-- **Minimal Integration** - 1-day setup vs. weeks of development
-
-[Learn more about implementation options →](https://arwproject.github.io/arw-p/)
-
 ---
 
 ## 📚 Documentation
 
 Our comprehensive documentation is built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) and includes:
 
-### 🏠 [**Documentation Home**](https://arwproject.github.io/arw-p/)
+### 🏠 [**Documentation Home**](https://arwproject.github.io/ARW-P/)
 Complete overview, architecture diagrams, and getting started guide
 
-### 📋 [**Implementation Guide**](https://arwproject.github.io/arw-p/flows/)
+### 📋 [**Implementation Guide**](https://arwproject.github.io/ARW-P/flows/)
 Step-by-step authentication flows, API usage, and security best practices
 
 ### 🔧 **Additional Resources** *(Coming Soon)*
@@ -78,8 +56,8 @@ Create `/.well-known/agents.json`:
 
 ```json
 {
-  "$schema": "https://arw.dev/schemas/agents-0.1.json",
-  "specVersion": "0.1",
+  "$schema": "https://arw.dev/schemas/agents-1.0.json",
+  "specVersion": "1.0",
   "endpoints": [
     {
       "path": "/ai/search",
@@ -98,7 +76,7 @@ Implement secure authentication:
 ```javascript
 app.get('/.well-known/ai-token', (req, res) => {
     const nonce = generateSecureNonce();
-    res.json({ nonce, tokenEndpoint: '//.well-known/ai-token' });
+    res.json({ nonce, tokenEndpoint: '/.well-known/ai-token' });
 });
 ```
 
@@ -216,14 +194,10 @@ The ARW-P specification is open source and free to implement. We encourage adopt
 
 ---
 
-<div align="center">
-
 **Ready to enable AI-native interactions on your website?**
 
-[📖 **Get Started**](https://arwproject.github.io/arw-p/) • [🔧 **Implementation Guide**](https://arwproject.github.io/arw-p/flows/) • [💬 **Join Community**](https://github.com/arwproject/arw-p/discussions)
+[📖 **Get Started**](https://arwproject.github.io/ARW-P/) • [🔧 **Implementation Guide**](https://arwproject.github.io/ARW-P/flows/) • [💬 **Join Community**](https://github.com/arwproject/arw-p/discussions)
 
 ---
 
 *Building the future of AI-web interactions, together.*
-
-</div>
