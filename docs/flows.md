@@ -1,12 +1,8 @@
 # 🔄 Endpoint & Token Flows
 
-<div align="center">
-
 **Complete guide to implementing ARW-P authentication and API interactions**
 
 *From discovery to production-ready implementations*
-
-</div>
 
 ---
 
@@ -57,10 +53,6 @@ curl https://example.com/.well-known/agents.json
       "requests": 100,
       "windowMs": 60000,
       "scope": "global"
-    },
-    "burst": {
-      "allowed": true,
-      "maxBurst": 10
     }
   },
   "endpoints": [
@@ -68,23 +60,13 @@ curl https://example.com/.well-known/agents.json
       "path": "/ai/search",
       "method": "POST",
       "scope": "search",
-      "description": "Semantic search across all content",
-      "rateLimits": {
-        "requests": 50,
-        "windowMs": 60000
-      }
+      "description": "Semantic search across all content"
     },
     {
       "path": "/ai/content/{id}",
       "method": "GET", 
       "scope": "content",
       "description": "Retrieve structured content by ID"
-    },
-    {
-      "path": "/ai/analytics/summary",
-      "method": "GET",
-      "scope": "analytics", 
-      "description": "Get usage analytics summary"
     }
   ]
 }
@@ -101,11 +83,7 @@ app.get('/.well-known/agents.json', (req, res) => {
         meta: {
             name: process.env.API_NAME,
             description: "AI-friendly access to our platform",
-            version: process.env.API_VERSION,
-            contact: {
-                email: process.env.CONTACT_EMAIL,
-                url: process.env.DEVELOPER_URL
-            }
+            version: process.env.API_VERSION
         },
         authentication: {
             required: true,
@@ -143,15 +121,7 @@ curl https://example.com/.well-known/ai-token
   "nonce": "abc123def456",
   "tokenEndpoint": "https://example.com/.well-known/ai-token",
   "expiresAt": "2024-01-15T10:30:00Z",
-  "algorithm": "ES256",
-  "challenge": {
-    "format": "jwt",
-    "claims": {
-      "iss": "example.com",
-      "aud": "ai-agents",
-      "exp": 1705315800
-    }
-  }
+  "algorithm": "ES256"
 }
 ```
 
@@ -161,16 +131,13 @@ The agent must sign the nonce with their private key:
 
 ```javascript
 // Agent-side implementation (conceptual)
-import { signJWT } from './crypto-utils';
-
 async function generateProof(nonce, privateKey) {
     const payload = {
         nonce: nonce,
         timestamp: Date.now(),
         agent: {
             id: "agent-12345",
-            version: "1.0.0",
-            capabilities: ["search", "content"]
+            version: "1.0.0"
         }
     };
     
@@ -200,11 +167,10 @@ curl -X POST https://example.com/.well-known/ai-token \
 **Success Response:**
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZ2VudC0xMjM0NSIsInNjb3BlcyI6WyJzZWFyY2giLCJjb250ZW50Il0sImlhdCI6MTcwNTMxMjIwMCwiZXhwIjoxNzA1MzE1ODAwfQ.signature",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "tokenType": "Bearer",
   "expiresIn": 3600,
   "scope": "search content",
-  "refreshToken": "refresh_token_here",
   "rateLimits": {
     "remaining": 100,
     "resetAt": "2024-01-15T11:30:00Z"
@@ -260,24 +226,11 @@ app.post('/.well-known/ai-token', async (req, res) => {
             });
         }
 
-        // Check agent authorization
-        const authorizedScopes = await checkAgentAuthorization(
-            agent.id,
-            agent.requestedScopes
-        );
-
-        if (authorizedScopes.length === 0) {
-            return res.status(403).json({
-                error: 'insufficient_scope',
-                error_description: 'Agent not authorized for requested scopes'
-            });
-        }
-
         // Generate access token
         const accessToken = jwt.sign(
             {
                 sub: agent.id,
-                scopes: authorizedScopes,
+                scopes: ['search', 'content'],
                 iat: Math.floor(Date.now() / 1000),
                 exp: Math.floor(Date.now() / 1000) + 3600
             },
@@ -285,27 +238,14 @@ app.post('/.well-known/ai-token', async (req, res) => {
             { algorithm: 'HS256' }
         );
 
-        // Generate refresh token (optional)
-        const refreshToken = await generateRefreshToken(agent.id);
-
         // Clean up nonce
         await redis.del(`nonce:${nonce}`);
-
-        // Track token issuance
-        await auditLog.log({
-            event: 'token_issued',
-            agentId: agent.id,
-            scopes: authorizedScopes,
-            timestamp: new Date()
-        });
 
         res.json({
             token: accessToken,
             tokenType: 'Bearer',
             expiresIn: 3600,
-            scope: authorizedScopes.join(' '),
-            refreshToken,
-            rateLimits: await getRateLimitStatus(agent.id)
+            scope: 'search content'
         });
 
     } catch (error) {
@@ -337,10 +277,6 @@ curl https://example.com/ai/search \
     "filters": {
       "category": ["technology", "environment"],
       "publishedAfter": "2023-01-01"
-    },
-    "options": {
-      "includeSnippets": true,
-      "highlightTerms": true
     }
   }'
 ```
@@ -356,192 +292,131 @@ curl https://example.com/ai/search \
       "id": "art-123",
       "title": "Revolutionary Solar Panel Technology",
       "url": "/articles/solar-panel-breakthrough",
-      "snippet": "Scientists develop new <mark>sustainable energy</mark> technology that increases solar efficiency by 40%",
+      "snippet": "Scientists develop new sustainable energy technology that increases solar efficiency by 40%",
       "relevance": 0.95,
       "metadata": {
         "author": "Dr. Sarah Chen",
         "publishDate": "2024-01-10T09:00:00Z",
         "category": "technology",
         "tags": ["solar", "renewable", "innovation"],
-        "readTime": "8 min",
-        "language": "en"
-      },
-      "analytics": {
-        "views": 15420,
-        "shares": 89,
-        "rating": 4.7
+        "readTime": "8 min"
       }
     }
-  ],
-  "facets": {
-    "categories": [
-      {"name": "Technology", "count": 89, "selected": true},
-      {"name": "Environment", "count": 67, "selected": true},
-      {"name": "Business", "count": 34, "selected": false}
-    ],
-    "timeRange": [
-      {"period": "Last month", "count": 23},
-      {"period": "Last 3 months", "count": 67},
-      {"period": "Last year", "count": 156}
-    ]
-  },
-  "suggestions": [
-    "wind energy innovations",
-    "battery storage solutions",
-    "green hydrogen technology"
   ],
   "pagination": {
     "page": 1,
     "pageSize": 10,
     "totalPages": 16,
-    "hasNext": true,
-    "nextCursor": "eyJzY29yZSI6MC45NSwiaWQiOiJhcnQtMTIzIn0="
-  },
-  "meta": {
-    "requestId": "req-abc123",
-    "timestamp": "2024-01-15T10:30:00Z",
-    "version": "1.2.0"
+    "hasNext": true
   }
-}
-```
-
-### Advanced Content Retrieval
-
-```bash
-curl https://example.com/ai/content/art-123 \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  -H "Accept: application/json"
-```
-
-**Response:**
-```json
-{
-  "id": "art-123",
-  "type": "article",
-  "title": "Revolutionary Solar Panel Technology",
-  "content": {
-    "abstract": "This article explores breakthrough solar panel technology that promises to revolutionize renewable energy adoption worldwide.",
-    "sections": [
-      {
-        "heading": "Introduction",
-        "content": "The renewable energy sector has seen remarkable progress...",
-        "wordCount": 156
-      },
-      {
-        "heading": "Technical Innovation", 
-        "content": "The new photovoltaic cells utilize a novel perovskite structure...",
-        "wordCount": 234
-      }
-    ],
-    "keyPoints": [
-      "40% efficiency improvement over traditional panels",
-      "Lower manufacturing costs due to simplified process",
-      "Enhanced durability in extreme weather conditions"
-    ],
-    "totalWordCount": 1250
-  },
-  "metadata": {
-    "author": {
-      "name": "Dr. Sarah Chen",
-      "bio": "Leading researcher in photovoltaic technology",
-      "credentials": ["PhD Physics", "MIT Solar Research Lab"]
-    },
-    "publishDate": "2024-01-10T09:00:00Z",
-    "lastModified": "2024-01-12T14:30:00Z",
-    "category": "technology",
-    "tags": ["solar", "renewable", "innovation", "efficiency"],
-    "seo": {
-      "metaDescription": "Discover breakthrough solar panel technology...",
-      "focusKeywords": ["solar panels", "renewable energy", "efficiency"]
-    }
-  },
-  "media": [
-    {
-      "type": "image",
-      "url": "/images/solar-panel-lab.jpg",
-      "alt": "Researchers testing new solar panel prototypes",
-      "caption": "Testing the new high-efficiency solar panels"
-    }
-  ],
-  "references": [
-    {
-      "title": "Perovskite Solar Cells: Progress and Challenges",
-      "authors": ["Chen, S.", "Johnson, M."],
-      "journal": "Nature Energy",
-      "year": 2023,
-      "doi": "10.1038/s41560-023-01234-5"
-    }
-  ]
 }
 ```
 
 ---
 
-## 🔄 Complete Flow Diagram
+## 🔄 Complete Flow Summary
 
-```mermaid
-sequenceDiagram
-    participant Agent as 🤖 AI Agent
-    participant Discovery as 🔍 Discovery Service
-    participant Auth as 🔐 Auth Service
-    participant API as ⚡ API Service
-    participant Cache as 💾 Cache Layer
-    participant DB as 🗄️ Database
+Here's the complete interaction flow:
 
-    Note over Agent,DB: Phase 1: Discovery
-    Agent->>Discovery: GET /.well-known/agents.json
-    Discovery->>Cache: Check cached capabilities
-    alt Cache Hit
-        Cache-->>Discovery: Return cached data
-    else Cache Miss
-        Discovery->>DB: Fetch current capabilities
-        DB-->>Discovery: Return capabilities
-        Discovery->>Cache: Store in cache
-    end
-    Discovery-->>Agent: Capabilities + Rate Limits
+```
+1. DISCOVERY PHASE
+   Agent → GET /.well-known/agents.json
+   Site  → Returns capabilities and requirements
 
-    Note over Agent,DB: Phase 2: Authentication
-    Agent->>Auth: GET /.well-known/ai-token
-    Auth->>Cache: Generate & store nonce
-    Auth-->>Agent: Challenge with nonce
+2. AUTHENTICATION PHASE
+   Agent → GET /.well-known/ai-token
+   Site  → Returns challenge with nonce
+   
+   Agent → Signs nonce with private key
+   Agent → POST /.well-known/ai-token with proof
+   Site  → Verifies signature and returns JWT token
 
-    Agent->>Agent: Sign nonce with private key
-    Agent->>Auth: POST with signed proof
-    Auth->>Cache: Verify nonce exists
-    Auth->>Auth: Verify cryptographic signature
-    Auth->>DB: Check agent authorization
-    alt Valid Signature & Authorized
-        Auth->>Cache: Store token metadata
-        Auth-->>Agent: Access token + refresh token
-    else Invalid/Unauthorized
-        Auth-->>Agent: Error response
-    end
+3. API USAGE PHASE
+   Agent → POST /ai/search with Bearer token
+   Site  → Validates token and returns results
+   
+   (Multiple API calls can be made with the same token)
 
-    Note over Agent,DB: Phase 3: API Usage
-    loop Multiple API Calls
-        Agent->>API: Request with Bearer token
-        API->>Cache: Validate token & check rate limits
-        alt Valid Token & Within Limits
-            API->>DB: Fetch requested data
-            DB-->>API: Return data
-            API->>Cache: Update rate limit counters
-            API-->>Agent: Structured response
-        else Invalid Token
-            API-->>Agent: 401 Unauthorized
-        else Rate Limited
-            API-->>Agent: 429 Too Many Requests
-        end
-    end
+4. TOKEN REFRESH (Optional)
+   Agent → POST refresh token
+   Site  → Returns new access token
+```
 
-    Note over Agent,DB: Optional: Token Refresh
-    Agent->>Auth: POST refresh token
-    Auth->>Cache: Validate refresh token
-    alt Valid Refresh Token
-        Auth->>Cache: Generate new access token
-        Auth-->>Agent: New access token
-    else Invalid Refresh Token
-        Auth-->>Agent: Re-authentication required
-    end
+---
+
+## 🚨 Error Handling
+
+### Common Error Responses
+
+| Status Code | Error Type | Description | Retry Strategy |
+|-------------|------------|-------------|----------------|
+| 400 | `invalid_request` | Malformed request parameters | Don't retry, fix request |
+| 401 | `invalid_token` | Token expired or invalid | Refresh token or re-authenticate |
+| 403 | `insufficient_scope` | Token lacks required permissions | Request appropriate scopes |
+| 429 | `rate_limit_exceeded` | Too many requests | Retry after specified delay |
+| 500 | `server_error` | Internal server error | Retry with exponential backoff |
+
+### Error Response Format
+
+```json
+{
+  "error": "rate_limit_exceeded",
+  "error_description": "Request limit exceeded for this time window",
+  "error_code": 4291,
+  "details": {
+    "limit": 100,
+    "remaining": 0,
+    "resetAt": "2024-01-15T11:00:00Z",
+    "retryAfter": 300
+  },
+  "meta": {
+    "requestId": "req-abc123",
+    "timestamp": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+### Client-Side Error Handling
+
+```javascript
+class ARWPClient {
+    async makeRequest(endpoint, options = {}) {
+        const maxRetries = options.maxRetries || 3;
+        let attempt = 0;
+
+        while (attempt < maxRetries) {
+            try {
+                const response = await this.executeRequest(endpoint, options);
+                return response;
+            } catch (error) {
+                attempt++;
+                
+                if (error.status === 429) {
+                    // Rate limited - wait and retry
+                    const retryAfter = error.retryAfter || Math.pow(2, attempt) * 1000;
+                    await this.sleep(retryAfter);
+                    continue;
+                } else if (error.status === 401) {
+                    // Token expired - refresh and retry
+                    await this.refreshToken();
+                    continue;
+                } else if (error.status >= 500 && attempt < maxRetries) {
+                    // Server error - exponential backoff
+                    await this.sleep(Math.pow(2, attempt) * 1000);
+                    continue;
+                } else {
+                    throw error;
+                }
+            }
+        }
+        
+        throw new Error(`Max retries (${maxRetries}) exceeded`);
+    }
+
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+}
 ```
 
 ---
@@ -642,166 +517,18 @@ class RateLimiter {
 
 ---
 
-## 🚨 Error Handling
-
-### Common Error Responses
-
-| Status Code | Error Type | Description | Retry Strategy |
-|-------------|------------|-------------|----------------|
-| 400 | `invalid_request` | Malformed request parameters | Don't retry, fix request |
-| 401 | `invalid_token` | Token expired or invalid | Refresh token or re-authenticate |
-| 403 | `insufficient_scope` | Token lacks required permissions | Request appropriate scopes |
-| 429 | `rate_limit_exceeded` | Too many requests | Retry after specified delay |
-| 500 | `server_error` | Internal server error | Retry with exponential backoff |
-
-### Error Response Format
-
-```json
-{
-  "error": "rate_limit_exceeded",
-  "error_description": "Request limit exceeded for this time window",
-  "error_code": 4291,
-  "details": {
-    "limit": 100,
-    "remaining": 0,
-    "resetAt": "2024-01-15T11:00:00Z",
-    "retryAfter": 300
-  },
-  "meta": {
-    "requestId": "req-abc123",
-    "timestamp": "2024-01-15T10:30:00Z",
-    "documentation": "https://example.com/docs/errors#rate-limiting"
-  }
-}
-```
-
-### Client-Side Error Handling
-
-```javascript
-class ARWPClient {
-    async makeRequest(endpoint, options = {}) {
-        const maxRetries = options.maxRetries || 3;
-        let attempt = 0;
-
-        while (attempt < maxRetries) {
-            try {
-                const response = await this.executeRequest(endpoint, options);
-                return response;
-            } catch (error) {
-                attempt++;
-                
-                if (error.status === 429) {
-                    // Rate limited - wait and retry
-                    const retryAfter = error.retryAfter || Math.pow(2, attempt) * 1000;
-                    await this.sleep(retryAfter);
-                    continue;
-                } else if (error.status === 401) {
-                    // Token expired - refresh and retry
-                    await this.refreshToken();
-                    continue;
-                } else if (error.status >= 500 && attempt < maxRetries) {
-                    // Server error - exponential backoff
-                    await this.sleep(Math.pow(2, attempt) * 1000);
-                    continue;
-                } else {
-                    // Don't retry other errors
-                    throw error;
-                }
-            }
-        }
-        
-        throw new Error(`Max retries (${maxRetries}) exceeded`);
-    }
-
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-}
-```
-
----
-
-## 📊 Monitoring & Analytics
-
-### Request Logging
-
-```javascript
-// Comprehensive request logging
-app.use('/ai/*', (req, res, next) => {
-    const startTime = Date.now();
-    const requestId = generateRequestId();
-    
-    req.requestId = requestId;
-    req.startTime = startTime;
-
-    res.on('finish', () => {
-        const duration = Date.now() - startTime;
-        const logData = {
-            requestId,
-            method: req.method,
-            path: req.path,
-            agentId: req.agentId,
-            statusCode: res.statusCode,
-            duration,
-            userAgent: req.get('User-Agent'),
-            ip: req.ip,
-            timestamp: new Date().toISOString()
-        };
-
-        // Log to analytics service
-        analytics.track('api_request', logData);
-        
-        // Update metrics
-        metrics.requestDuration.observe(
-            { endpoint: req.path, status: res.statusCode },
-            duration
-        );
-    });
-
-    next();
-});
-```
-
-### Performance Metrics
-
-```javascript
-// Key metrics to track
-const metrics = {
-    requestCount: new Counter('arwp_requests_total', ['endpoint', 'method', 'status']),
-    requestDuration: new Histogram('arwp_request_duration_ms', ['endpoint', 'status']),
-    activeTokens: new Gauge('arwp_active_tokens'),
-    rateLimitHits: new Counter('arwp_rate_limit_hits', ['agentId', 'endpoint']),
-    authFailures: new Counter('arwp_auth_failures', ['reason']),
-    dataTransfer: new Counter('arwp_bytes_transferred', ['direction'])
-};
-
-// Dashboard query examples
-const dashboardQueries = {
-    requestRate: 'rate(arwp_requests_total[5m])',
-    errorRate: 'rate(arwp_requests_total{status=~"4..|5.."}[5m])',
-    avgResponseTime: 'avg(arwp_request_duration_ms) by (endpoint)',
-    topAgents: 'topk(10, sum by (agentId) (arwp_requests_total))'
-};
-```
-
----
-
 ## 🎯 Next Steps
 
 Ready to implement ARW-P? Here's your action plan:
 
-1. **🔧 [Setup Guide](setup.md)** - Step-by-step implementation
-2. **📚 [API Reference](api-reference.md)** - Complete endpoint documentation  
-3. **🧪 [Testing Tools](testing.md)** - Validation and debugging utilities
-4. **🏗️ [Examples](examples.md)** - Real-world implementation patterns
-5. **🤝 [Community](https://github.com/arwproject/arw-p/discussions)** - Get help and share experiences
+1. **🔧 Setup Discovery Files** - Create `/.well-known/agents.json`
+2. **🔐 Implement Authentication** - Add token exchange endpoints
+3. **⚡ Create API Endpoints** - Build your AI-friendly APIs
+4. **🧪 Test Integration** - Validate with test agents
+5. **📊 Monitor Usage** - Track performance and usage patterns
 
 ---
-
-<div align="center">
 
 **Questions? Need help?**
 
 [📖 Documentation](/) • [💬 Community Forum](https://github.com/arwproject/arw-p/discussions) • [🐛 Report Issues](https://github.com/arwproject/arw-p/issues)
-
-</div>

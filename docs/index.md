@@ -1,16 +1,10 @@
 # 🤖 ARW-P: Agent-Ready Web Protocol
 
-<div align="center">
-
 **The future-ready protocol that bridges AI agents and web services**
-
-[![Version](https://img.shields.io/badge/version-0.1-blue.svg)](https://github.com/arwproject/arw-p)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-Beta-orange.svg)]()
 
 *Enabling seamless AI-to-web interactions without compromising human experiences*
 
-</div>
+![Version](https://img.shields.io/badge/version-0.1-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![Status](https://img.shields.io/badge/status-Beta-orange.svg)
 
 ---
 
@@ -19,8 +13,6 @@
 **ARW-P** (pronounced "R-Web-P") is an open standard protocol that empowers websites to expose dedicated, high-performance lanes for AI agents while preserving the optimal human user experience. Think of it as creating a "fast lane" for bots alongside the regular web traffic.
 
 ### 🎯 Key Benefits
-
-<div class="benefits-grid">
 
 **🔍 Structured Data**
 - Reduces AI hallucinations with precise, typed responses
@@ -42,49 +34,26 @@
 - No changes to human-facing pages
 - Progressive enhancement approach
 
-</div>
-
 ---
 
 ## 🏗️ Architecture Overview
 
 ARW-P creates a parallel interaction layer that coexists with your existing web presence:
 
-```mermaid
-graph TB
-    subgraph "Traditional Web"
-        Human[👤 Human User]
-        Browser[🌐 Web Browser]
-        HTML[📄 HTML Pages]
-    end
-    
-    subgraph "ARW-P Layer"
-        Agent[🤖 AI Agent]
-        ARWEndpoints[⚡ ARW-P Endpoints]
-        Discovery[🔍 Discovery Files]
-    end
-    
-    subgraph "Your Website"
-        Server[🖥️ Web Server]
-        Database[(🗄️ Database)]
-        API[🔌 Existing APIs]
-    end
-    
-    Human --> Browser
-    Browser --> HTML
-    HTML --> Server
-    
-    Agent --> Discovery
-    Agent --> ARWEndpoints
-    ARWEndpoints --> Server
-    
-    Server --> Database
-    Server --> API
-    
-    style Agent fill:#e1f5fe
-    style ARWEndpoints fill:#f3e5f5
-    style Discovery fill:#fff3e0
 ```
+┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
+│   Traditional Web   │    │    ARW-P Layer      │    │   Your Website      │
+│                     │    │                     │    │                     │
+│ 👤 Human User       │    │ 🤖 AI Agent        │    │ 🖥️ Web Server       │
+│ 🌐 Web Browser     │────│ ⚡ ARW-P Endpoints  │────│ 🗄️ Database         │
+│ 📄 HTML Pages      │    │ 🔍 Discovery Files │    │ 🔌 Existing APIs   │
+└─────────────────────┘    └─────────────────────┘    └─────────────────────┘
+```
+
+**Flow:**
+1. Humans use regular web browsers and HTML pages
+2. AI agents use ARW-P endpoints and discovery files  
+3. Both paths connect to the same web server and data
 
 ---
 
@@ -169,23 +138,6 @@ Create your `/.well-known/agents.json`:
           "default": 10,
           "max": 50
         }
-      },
-      "responseSchema": {
-        "type": "object",
-        "properties": {
-          "results": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "title": {"type": "string"},
-                "url": {"type": "string"},
-                "snippet": {"type": "string"},
-                "relevance": {"type": "number"}
-              }
-            }
-          }
-        }
       }
     },
     {
@@ -232,19 +184,6 @@ Example `/ai/search` response:
         "tags": ["machine-learning", "tutorial", "beginner"],
         "readTime": "15 min"
       }
-    },
-    {
-      "id": "deep-learning-guide",
-      "title": "Deep Learning Best Practices",
-      "url": "/articles/deep-learning-guide",
-      "snippet": "Advanced techniques for building and training neural networks effectively.",
-      "relevance": 0.87,
-      "metadata": {
-        "author": "Prof. Alex Johnson",
-        "publishDate": "2024-02-03",
-        "tags": ["deep-learning", "neural-networks", "advanced"],
-        "readTime": "25 min"
-      }
     }
   ],
   "facets": {
@@ -252,45 +191,9 @@ Example `/ai/search` response:
       {"name": "Tutorials", "count": 45},
       {"name": "Research", "count": 32},
       {"name": "Tools", "count": 28}
-    ],
-    "difficulty": [
-      {"name": "Beginner", "count": 67},
-      {"name": "Intermediate", "count": 41},
-      {"name": "Advanced", "count": 19}
     ]
   }
 }
-```
-
----
-
-## 🔒 Security & Authentication Flow
-
-```mermaid
-sequenceDiagram
-    participant Agent as 🤖 AI Agent
-    participant Site as 🌐 Your Site
-    participant Auth as 🔐 Auth Service
-    
-    Note over Agent,Auth: 1. Discovery Phase
-    Agent->>Site: GET /.well-known/agents.json
-    Site-->>Agent: Capabilities & requirements
-    
-    Note over Agent,Auth: 2. Authentication Phase
-    Agent->>Site: GET /.well-known/ai-token
-    Site-->>Agent: {"nonce": "abc123", "tokenEndpoint": "..."}
-    
-    Agent->>Agent: Sign nonce with private key
-    Agent->>Site: POST /.well-known/ai-token<br/>{"nonce": "abc123", "proof": "<signature>"}
-    Site->>Auth: Verify signature
-    Auth-->>Site: ✅ Valid
-    Site-->>Agent: {"token": "<jwt>", "expiresIn": 3600}
-    
-    Note over Agent,Auth: 3. API Usage Phase
-    Agent->>Site: POST /ai/search<br/>Authorization: Bearer <jwt>
-    Site->>Auth: Validate token
-    Auth-->>Site: ✅ Valid + scope check
-    Site-->>Agent: Search results
 ```
 
 ---
@@ -435,133 +338,6 @@ app.post('/ai/search', authenticateToken, (req, res) => {
 }
 ```
 
-### SaaS Platform
-
-```json
-{
-  "endpoints": [
-    {
-      "path": "/ai/docs/search",
-      "method": "POST",
-      "scope": "documentation",
-      "description": "Search API documentation and guides"
-    },
-    {
-      "path": "/ai/status",
-      "method": "GET",
-      "scope": "monitoring",
-      "description": "Service health and performance metrics"
-    },
-    {
-      "path": "/ai/usage/{metric}",
-      "method": "GET",
-      "scope": "analytics",
-      "description": "Usage statistics and trends"
-    }
-  ]
-}
-```
-
----
-
-## 📈 Performance & Monitoring
-
-### Response Time Targets
-
-| Endpoint Type | Target Response Time | SLA |
-|---------------|---------------------|-----|
-| Discovery files | < 50ms | 99.9% |
-| Token exchange | < 100ms | 99.5% |
-| Search queries | < 200ms | 99.0% |
-| Content retrieval | < 150ms | 99.5% |
-
-### Monitoring Metrics
-
-```javascript
-// Example monitoring setup
-const arwpMetrics = {
-    requestCount: new Counter('arwp_requests_total'),
-    responseTime: new Histogram('arwp_response_duration_ms'),
-    errorRate: new Counter('arwp_errors_total'),
-    tokenUsage: new Gauge('arwp_active_tokens')
-};
-
-app.use('/ai/*', (req, res, next) => {
-    const start = Date.now();
-    
-    res.on('finish', () => {
-        arwpMetrics.requestCount.inc({
-            endpoint: req.path,
-            method: req.method,
-            status: res.statusCode
-        });
-        
-        arwpMetrics.responseTime.observe(
-            { endpoint: req.path },
-            Date.now() - start
-        );
-    });
-    
-    next();
-});
-```
-
----
-
-## 🔧 Advanced Configuration
-
-### Rate Limiting Strategies
-
-```json
-{
-  "rateLimits": {
-    "perAgent": {
-      "requests": 1000,
-      "windowMs": 3600000,
-      "scope": "global"
-    },
-    "perEndpoint": {
-      "search": {
-        "requests": 100,
-        "windowMs": 60000
-      },
-      "content": {
-        "requests": 500,
-        "windowMs": 60000
-      }
-    },
-    "burst": {
-      "allowed": true,
-      "maxBurst": 10,
-      "replenishRate": 2
-    }
-  }
-}
-```
-
-### Caching Configuration
-
-```json
-{
-  "caching": {
-    "discovery": {
-      "ttl": 3600,
-      "strategy": "immutable"
-    },
-    "search": {
-      "ttl": 300,
-      "strategy": "query-based",
-      "varyBy": ["q", "limit", "scope"]
-    },
-    "content": {
-      "ttl": 1800,
-      "strategy": "etag",
-      "revalidate": true
-    }
-  }
-}
-```
-
 ---
 
 ## 🤝 Community & Support
@@ -575,12 +351,12 @@ app.use('/ai/*', (req, res, next) => {
 
 ### Contributing
 
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details on:
+We welcome contributions! Areas we need help with:
 
-- 🔧 Code contributions
+- 🔧 Code contributions and implementations
 - 📝 Documentation improvements  
 - 🧪 Testing and validation
-- 💡 Feature proposals
+- 💡 Feature proposals and feedback
 
 ### Roadmap
 
@@ -590,14 +366,10 @@ We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for deta
 
 ---
 
-<div align="center">
-
 **Ready to enable AI-native interactions on your website?**
 
-[Get Started →](flows.md) • [View Examples →](https://github.com/arwproject/arw-p-examples) • [Join Community →](https://discord.gg/arwp)
+[Get Started →](flows.md) • [View Examples →](https://github.com/arwproject/arw-p-examples) • [Join Community →](https://github.com/arwproject/arw-p/discussions)
 
 ---
 
 *ARW-P is an open standard maintained by the community*
-
-</div>
