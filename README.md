@@ -27,6 +27,28 @@
 - 🌐 **Universal Compatibility** - Works alongside existing web infrastructure
 - 📊 **Rich Analytics** - Detailed monitoring and usage insights
 - 🔧 **Easy Integration** - Simple implementation with comprehensive documentation
+- 👤 **User Delegation** - Secure agent-to-user authentication for personal actions
+- 📡 **Real-time Updates** - Server-Sent Events for dynamic content
+- 🧠 **Persistent Memory** - Agent conversation context across sessions
+- 🎯 **AI-Semantic Elements** - Stable UI targeting with data-ai-action attributes
+
+### 🏢 Protocol vs. Product
+
+ARW-P exists at two levels:
+
+#### 📜 **Open Protocol** (Free to Implement)
+- Core authentication and discovery specifications  
+- Anyone can implement the standard directly
+- Full control over implementation and hosting
+- Suitable for teams with development resources
+
+#### 🚀 **Commercial SaaS** (Managed Implementation)
+- **Beacon/CLI tool** - Automated manifest generation during CI/CD
+- **Edge Gateway** - Managed authentication and rate limiting infrastructure  
+- **AI Manifest** - Auto-generated content catalogs and semantic mappings
+- **Minimal Integration** - 1-day setup vs. weeks of development
+
+[Learn more about implementation options →](https://arwproject.github.io/arw-p/)
 
 ---
 

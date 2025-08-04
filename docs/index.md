@@ -57,6 +57,394 @@ ARW-P creates a parallel interaction layer that coexists with your existing web 
 
 ---
 
+## 🏢 Protocol vs. Product Implementation
+
+ARW-P exists at two levels: **Open Protocol** and **Commercial SaaS Implementation**
+
+### 📜 Open Protocol Layer (ARW-P Core)
+
+The **open, free-to-implement** standard that defines:
+- Discovery file formats (`/.well-known/agents.json`)
+- Authentication flows (agent + user delegation)
+- API endpoint specifications
+- Security requirements
+
+**Anyone can implement this protocol directly.**
+
+### 🚀 Commercial SaaS Layer (Implementation Product)
+
+A **complete business solution** built on ARW-P that provides:
+
+#### 🔧 Beacon/CLI Tool
+Automated tool that integrates into your CI/CD pipeline:
+
+```bash
+npm install -g arw-beacon
+
+# During your build process
+arw-beacon scan --site https://mysite.com --output ai-manifest.json
+arw-beacon deploy --manifest ai-manifest.json --target production
+```
+
+**What the Beacon does:**
+- Scans your website during build time
+- Automatically detects available endpoints and content
+- Generates `ai-manifest.json` with structured data catalog
+- Injects `data-ai-action` attributes into HTML elements
+- Creates semantic content mappings for AI agents
+
+#### 🌐 Edge Gateway Infrastructure
+Smart reverse-proxy layer (Cloudflare Workers) that handles:
+
+```
+┌─────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  AI Agent   │───▶│  Edge Gateway   │───▶│  Your Website   │
+│             │    │  (CDN Worker)   │    │                 │
+│             │    │                 │    │                 │
+│             │    │ • Auth & Rate   │    │ • Minimal       │
+│             │    │   Limiting      │    │   Changes       │
+│             │    │ • Signed Object │    │ • Existing APIs │
+│             │    │   Serving       │    │ • Normal Ops   │
+│             │    │ • API Proxying  │    │                 │
+└─────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+#### 📋 ai-manifest.json Structure
+Auto-generated catalog of your site's AI-friendly capabilities:
+
+```json
+{
+  "$schema": "https://arw.dev/schemas/ai-manifest-1.0.json",
+  "version": "1.0",
+  "generated": "2024-01-15T10:30:00Z",
+  "site": {
+    "domain": "mystore.com",
+    "name": "My Online Store",
+    "description": "E-commerce platform for outdoor gear"
+  },
+  "content_catalog": {
+    "products": {
+      "endpoint": "https://ai.mystore.com/ai/products/{id}",
+      "search_endpoint": "https://ai.mystore.com/ai/search/products",
+      "total_items": 1247,
+      "categories": ["hiking", "camping", "climbing"],
+      "sample_ids": ["prod_123", "prod_456"]
+    },
+    "articles": {
+      "endpoint": "https://ai.mystore.com/ai/articles/{slug}",
+      "search_endpoint": "https://ai.mystore.com/ai/search/articles",
+      "total_items": 89,
+      "topics": ["gear-reviews", "hiking-tips", "safety-guides"]
+    }
+  },
+  "actions": {
+    "search_products": {
+      "endpoint": "https://ai.mystore.com/ai/search/products",
+      "method": "POST",
+      "scopes": ["catalog"],
+      "parameters": {
+        "q": "string",
+        "category": "string",
+        "price_range": "object"
+      }
+    },
+    "check_inventory": {
+      "endpoint": "https://ai.mystore.com/ai/inventory/check", 
+      "method": "POST",
+      "scopes": ["inventory"],
+      "requires_user": false
+    },
+    "add_to_cart": {
+      "endpoint": "https://ai.mystore.com/ai/cart/add",
+      "method": "POST", 
+      "scopes": ["cart"],
+      "requires_user": true,
+      "user_scopes": ["shopping"]
+    }
+  },
+  "ui_elements": {
+    "product_cards": {
+      "selector": "[data-ai-action='product-card']",
+      "attributes": {
+        "data-product-id": "Product identifier",
+        "data-ai-price": "Current price",
+        "data-ai-availability": "In stock status"
+      }
+    },
+    "add_to_cart_button": {
+      "selector": "[data-ai-action='add-to-cart']",
+      "attributes": {
+        "data-product-id": "Product to add",
+        "data-quantity": "Number of items"
+      }
+    }
+  }
+}
+```
+
+#### 🎯 data-ai-action Attributes
+Stable, semantic HTML attributes injected by the Beacon:
+
+```html
+<!-- Traditional HTML (fragile for AI) -->
+<button class="btn btn-primary cart-add-item" id="add-123">Add to Cart</button>
+
+<!-- ARW-P Enhanced (stable for AI) -->
+<button 
+  class="btn btn-primary cart-add-item" 
+  id="add-123"
+  data-ai-action="add-to-cart"
+  data-product-id="prod_123"
+  data-price="29.99"
+  data-ai-label="Add hiking boots to cart">
+  Add to Cart
+</button>
+```
+
+#### 🗂️ ai-booking-map.yaml (Optional)
+For complex workflows, explicitly map internal APIs to public AI endpoints:
+
+```yaml
+# ai-booking-map.yaml - Customer authored
+apiVersion: arw.dev/v1
+kind: BookingMap
+metadata:
+  site: mytravel.com
+  
+mappings:
+  flight_search:
+    public_endpoint: /ai/flights/search
+    internal_apis:
+      - POST /internal/flight-search/v2
+      - GET /internal/inventory/flights
+    transformation: flight_search_transform
+    
+  hotel_booking:
+    public_endpoint: /ai/hotels/book
+    internal_apis:
+      - POST /internal/booking/create
+      - POST /internal/payment/process
+    requires_user: true
+    scopes: [booking, payments]
+    transformation: hotel_booking_transform
+```
+
+### 🔄 Implementation Comparison
+
+| Aspect | Open Protocol (DIY) | Commercial SaaS |
+|--------|-------------------|-----------------|
+| **Setup Time** | 2-4 weeks of dev work | 1-day integration |
+| **Maintenance** | Ongoing updates required | Automatically maintained |
+| **Features** | Basic auth + endpoints | Full AI optimization suite |
+| **Cost** | Developer time | Subscription fee |
+| **Control** | Full control | Managed service |
+| **Customization** | Unlimited | Configurable |
+
+---
+
+## ⚡ Dynamic Content & Real-time Features
+
+ARW-P supports advanced features for dynamic, time-sensitive content that changes frequently.
+
+### 📡 Server-Sent Events (SSE) for Live Updates
+
+For real-time content like flash sales, inventory changes, or dynamic pricing:
+
+```javascript
+// Agent subscribes to real-time updates
+const eventSource = new EventSource('https://example.com/ai/stream/offers', {
+    headers: {
+        'Authorization': 'Bearer ' + agentToken
+    }
+});
+
+eventSource.onmessage = function(event) {
+    const update = JSON.parse(event.data);
+    console.log('New offer:', update);
+};
+```
+
+**Server-side SSE implementation:**
+```javascript
+app.get('/ai/stream/offers', authenticateToken, (req, res) => {
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+    });
+
+    // Send initial data
+    res.write(`data: ${JSON.stringify({
+        type: 'connected',
+        timestamp: Date.now()
+    })}\n\n`);
+
+    // Listen for flash sales or inventory updates
+    const offerListener = (offer) => {
+        res.write(`data: ${JSON.stringify({
+            type: 'flash_sale',
+            offer: {
+                product_id: offer.product_id,
+                discount: offer.discount,
+                expires_at: offer.expires_at,
+                inventory_remaining: offer.stock
+            },
+            timestamp: Date.now()
+        })}\n\n`);
+    };
+
+    // Subscribe to real-time offer events
+    eventEmitter.on('flash_offer', offerListener);
+
+    // Cleanup on disconnect
+    req.on('close', () => {
+        eventEmitter.off('flash_offer', offerListener);
+    });
+});
+```
+
+### 🔍 Vector Indexing for Semantic Search
+
+Advanced implementations can include vector search capabilities:
+
+```json
+{
+  "endpoints": [
+    {
+      "path": "/ai/search/semantic",
+      "method": "POST",
+      "scope": "semantic_search",
+      "description": "Vector-based semantic search using embeddings",
+      "parameters": {
+        "query": {
+          "type": "string",
+          "description": "Natural language search query"
+        },
+        "embedding": {
+          "type": "array",
+          "description": "Pre-computed query embedding vector (optional)"
+        },
+        "filters": {
+          "type": "object",
+          "description": "Metadata filters (category, price, etc.)"
+        },
+        "similarity_threshold": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Minimum similarity score (0-1)"
+        }
+      }
+    }
+  ]
+}
+```
+
+**Semantic search response:**
+```json
+{
+  "query": "comfortable hiking boots for winter",
+  "embedding_model": "text-embedding-ada-002",
+  "results": [
+    {
+      "id": "prod_456",
+      "title": "Insulated Mountain Boots",
+      "similarity_score": 0.94,
+      "vector_distance": 0.06,
+      "metadata": {
+        "category": "footwear",
+        "season": "winter",
+        "features": ["insulated", "waterproof", "hiking"]
+      }
+    }
+  ],
+  "search_metadata": {
+    "total_vectors_searched": 50000,
+    "search_time_ms": 12,
+    "index_version": "v2.1"
+  }
+}
+```
+
+### 🧠 Persistent Memory Agents
+
+Support for agents that maintain conversation context across sessions:
+
+```json
+{
+  "endpoints": [
+    {
+      "path": "/ai/memory/store",
+      "method": "POST",
+      "scope": "memory",
+      "description": "Store conversation context and preferences",
+      "requires_user": true,
+      "user_scopes": ["memory_storage"]
+    },
+    {
+      "path": "/ai/memory/retrieve",
+      "method": "GET",
+      "scope": "memory", 
+      "description": "Retrieve stored conversation context",
+      "requires_user": true,
+      "user_scopes": ["memory_access"]
+    }
+  ]
+}
+```
+
+**Memory storage example:**
+```bash
+curl -X POST https://example.com/ai/memory/store \
+  -H "Authorization: Bearer <AGENT_TOKEN>" \
+  -H "X-User-Token: Bearer <USER_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "conversation_id": "conv_789",
+    "context": {
+      "user_preferences": {
+        "price_range": "100-200",
+        "preferred_brands": ["Nike", "Adidas"],
+        "size": "10",
+        "activity": "running"
+      },
+      "search_history": [
+        "running shoes under $150",
+        "Nike Air Max reviews"
+      ],
+      "cart_items": ["prod_123"],
+      "session_start": "2024-01-15T10:00:00Z"
+    },
+    "expires_at": "2024-01-22T10:00:00Z"
+  }'
+```
+
+### 🔔 Push Notifications for Agents
+
+Webhook-style notifications for important events:
+
+```json
+{
+  "webhooks": {
+    "inventory_alerts": {
+      "endpoint": "https://agent-provider.com/webhooks/inventory",
+      "events": ["out_of_stock", "back_in_stock", "low_inventory"],
+      "filters": {
+        "product_categories": ["electronics", "apparel"],
+        "price_threshold": 100
+      }
+    },
+    "price_changes": {
+      "endpoint": "https://agent-provider.com/webhooks/pricing",
+      "events": ["price_drop", "sale_started", "sale_ending"],
+      "user_specific": true
+    }
+  }
+}
+```
+
+---
+
 ## 👥 Core Actors & Trust Model
 
 | Actor | Role & Responsibilities |
@@ -68,14 +456,23 @@ ARW-P creates a parallel interaction layer that coexists with your existing web 
 
 ---
 
-## 📋 Required Components (v0.1)
+## 📋 Required Components (v1.0)
 
 ### Core Discovery Files
 
 | Endpoint | HTTP Method | Purpose | Required Fields |
 |----------|-------------|---------|-----------------|
-| `/.well-known/ai-token` | `GET` + `POST` | Token exchange & authentication | `nonce`, `tokenEndpoint` |
+| `/.well-known/ai-token` | `GET` + `POST` | Agent identity token exchange | `nonce`, `tokenEndpoint` |
+| `/.well-known/user-delegate` | `POST` | User delegation request | `user_id`, `scopes`, `callback_url` |
+| `/.well-known/user-token` | `POST` | User token exchange | `delegation_request_id`, `authorization_code` |
 | `/.well-known/agents.json` | `GET` | Capability discovery | `specVersion`, `endpoints`, `scopes` |
+
+### Advanced Discovery (SaaS Implementation)
+
+| Endpoint | Purpose | Content Type |
+|----------|---------|--------------|
+| `/.well-known/ai-manifest.json` | Auto-generated content catalog | `application/json` |
+| `/ai-booking-map.yaml` | Custom API mapping (optional) | `text/yaml` |
 
 ### Content Endpoints
 
@@ -83,6 +480,9 @@ ARW-P creates a parallel interaction layer that coexists with your existing web 
 |---------|---------|--------------|
 | `/ai/<pageId>.json` | Page-specific structured data | `application/json` |
 | `/ai/search` | Natural language search interface | `application/json` |
+| `/ai/search/semantic` | Vector-based semantic search | `application/json` |
+| `/ai/memory/store` | Agent conversation context storage | `application/json` |
+| `/ai/memory/retrieve` | Agent conversation context retrieval | `application/json` |
 | `/ai/stream/*` *(optional)* | Real-time updates via Server-Sent Events | `text/event-stream` |
 
 ---
@@ -95,8 +495,8 @@ Create your `/.well-known/agents.json`:
 
 ```json
 {
-  "$schema": "https://arw.dev/schemas/agents-0.1.json",
-  "specVersion": "0.1",
+  "$schema": "https://arw.dev/schemas/agents-1.0.json",
+  "specVersion": "1.0",
   "meta": {
     "name": "My Website API",
     "description": "AI-friendly access to our content and services",
@@ -109,7 +509,12 @@ Create your `/.well-known/agents.json`:
   "authentication": {
     "required": true,
     "schemes": ["bearer"],
-    "tokenTtl": 3600
+    "tokenTtl": 3600,
+    "userDelegation": {
+      "supported": true,
+      "maxSessionDuration": 7200,
+      "supportedScopes": ["booking", "payments", "profile", "preferences"]
+    }
   },
   "rateLimits": {
     "default": {
@@ -118,6 +523,10 @@ Create your `/.well-known/agents.json`:
     },
     "search": {
       "requests": 20,
+      "windowMs": 60000
+    },
+    "user_actions": {
+      "requests": 10,
       "windowMs": 60000
     }
   },
@@ -141,6 +550,22 @@ Create your `/.well-known/agents.json`:
       }
     },
     {
+      "path": "/ai/search/semantic",
+      "method": "POST", 
+      "scope": "semantic_search",
+      "description": "Vector-based semantic search using embeddings",
+      "parameters": {
+        "query": {
+          "type": "string",
+          "required": true
+        },
+        "similarity_threshold": {
+          "type": "number",
+          "default": 0.7
+        }
+      }
+    },
+    {
       "path": "/ai/articles/{id}.json",
       "method": "GET",
       "scope": "content",
@@ -152,12 +577,53 @@ Create your `/.well-known/agents.json`:
           "description": "Article identifier"
         }
       }
+    },
+    {
+      "path": "/ai/bookings/create",
+      "method": "POST",
+      "scope": "booking",
+      "description": "Create a new booking (requires user delegation)",
+      "requires_user": true,
+      "user_scopes": ["booking", "payments"],
+      "parameters": {
+        "service_type": {
+          "type": "string",
+          "enum": ["flight", "hotel", "car"],
+          "required": true
+        }
+      }
+    },
+    {
+      "path": "/ai/memory/store",
+      "method": "POST",
+      "scope": "memory",
+      "description": "Store conversation context and preferences",
+      "requires_user": true,
+      "user_scopes": ["memory_storage"]
+    },
+    {
+      "path": "/ai/stream/offers",
+      "method": "GET",
+      "scope": "streaming",
+      "description": "Real-time offers via Server-Sent Events",
+      "content_type": "text/event-stream"
     }
   ],
   "scopes": {
     "search": "Search site content and metadata",
+    "semantic_search": "Advanced vector-based search capabilities",
     "content": "Access structured content data",
+    "booking": "Create and manage bookings (user delegation required)",
+    "memory": "Store and retrieve agent conversation context",
+    "streaming": "Subscribe to real-time content updates",
     "analytics": "Read aggregated usage statistics"
+  },
+  "features": {
+    "realtime_updates": true,
+    "persistent_memory": true,
+    "user_delegation": true,
+    "semantic_search": true,
+    "ai_manifest": true
   }
 }
 ```
