@@ -5,7 +5,7 @@ The **Agent-Ready Web Protocol** gives websites a dedicated, machine-friendly la
 ## Documentation
 Public docs are generated with [MkDocs](https://www.mkdocs.org/) and served via GitHub Pages. After enabling Pages, they will be available at:
 ```
-https://arwproject.github.io/arw-p/
+[https://arwproject.github.io/ARW-P/](https://arwproject.github.io/ARW-P/)
 ```
 
 ## Contributing
