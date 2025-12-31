@@ -2,6 +2,7 @@ site_name: ARW-P
 nav:
   - Home: index.md
   - Endpoint & Token Flows: flows.md
+  - Workflow Engine: workflow-engine.md
 theme:
   name: material
 docs_dir: docs
